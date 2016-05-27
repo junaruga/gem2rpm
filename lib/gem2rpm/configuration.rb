@@ -115,7 +115,9 @@ module Gem2Rpm
     # Handles list of given options. Use ARGV by default.
     def handle_options(args = ARGV)
       @options = Marshal.load Marshal.dump DEFAULT_OPTIONS # deep copy
+      #p "handle options 1"
       parser.parse!(args)
+      #p "handle options 2"
       @options[:args] = args
     # TODO: Refactor, this is probably not the best palce.
     rescue OptionParser::InvalidOption => e
