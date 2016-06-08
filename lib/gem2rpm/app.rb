@@ -1,18 +1,10 @@
 module Gem2Rpm
   class App
 
-    def self.start(options = Gem2Rpm::Configuration.instance.options)
+    def self.start
       begin
         app = Gem2Rpm::App.new
-        if options[:templates]
-          Gem2Rpm.show_templates
-          return true
-        end
-        if options[:version]
-          Gem2Rpm.show_version
-          return true
-        end
-        app.run(options)
+        app.run(Gem2Rpm::Configuration.instance.options)
         true
       rescue Exception => e
         Gem2Rpm.show_message(e.message)
@@ -21,6 +13,15 @@ module Gem2Rpm
     end
 
     def run(options = {})
+      if options[:templates]
+        Gem2Rpm.show_templates
+        return true
+      end
+      if options[:version]
+        Gem2Rpm.show_version
+        return true
+      end
+
       rest = options[:args]
 
       template =
@@ -81,14 +82,22 @@ module Gem2Rpm
         FileUtils.copy(options[:output_file], specfile) unless File.exist?(specfile)
         FileUtils.copy(gemfile, srpmdir)
 
-        command = "rpmbuild -bs --nodeps --define '_sourcedir #{srpmdir}' " +
-          "--define '_srcrpmdir #{out_dir}' #{specfile}"
-        unless system(command)
-           raise "Command failed: #{command}"
-        end
+        build_rpm(srpmdir, out_dir, specfile)
       end
 
       Gem2Rpm.print_dependencies(gemfile) if options[:deps]
+    end
+
+    def get_options
+      Gem2Rpm::Configuration.instance.options
+    end
+
+    def build_rpm(srpmdir, out_dir, specfile)
+      command = "rpmbuild -bs --nodeps --define '_sourcedir #{srpmdir}' " +
+        "--define '_srcrpmdir #{out_dir}' #{specfile}"
+      unless system(command)
+         raise "Command failed: #{command}"
+      end
     end
   end
 end
